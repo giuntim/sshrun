@@ -2,8 +2,11 @@ const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electr
 
 const path = require('node:path');
 const fs = require('node:fs');
-//const spawn = require("child_process").spawn;
 const child_process = require('child_process');
+
+// I18N
+var i18n = null; 
+
 
 // Finestra principale e tray icon
 var mainWindow=null;
@@ -14,12 +17,16 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+const trayIcon = nativeImage.createFromPath(path.join(__dirname , 'sshrun256.png'))
+const appIcon = nativeImage.createFromPath(path.join(__dirname , 'sshrun256.png'))
+
+
 const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    icon: path.join(__dirname , 'sshrun256.png'),
+    icon: appIcon,
     show: false,
     autoHideMenuBar: true, // Hide menu
     webPreferences: {
@@ -27,13 +34,13 @@ const createWindow = () => {
     },
   });
 
+
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
   
   
-
-  const icon = nativeImage.createFromPath(path.join(__dirname , 'sshrun256.png'));
-  tray = new Tray(icon);
+  // Create Tray icon
+  tray = new Tray(trayIcon);
 
  
 
@@ -57,6 +64,11 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
+
+  // Init 18n (must inist after startup)
+  i18n = new(require('./i18n/i18n.js'))
+
+  // Create main window
   createWindow();
 
   // On OS X it's common to re-create a window in the app when the
@@ -73,7 +85,7 @@ app.whenReady().then(async () => {
 
   let traymenu = []; // Tray menu
   traymenu.push(
-    { label: 'Main window', click:  function(){
+    { label: i18n.__('Main window'), click:  function(){
       if(mainWindow.isVisible()) {
         mainWindow.hide();
       }
@@ -82,7 +94,7 @@ app.whenReady().then(async () => {
       }
     } });
   traymenu.push(
-    { label: 'Quit', click:  function(){
+    { label: i18n.__('Quit'), click:  function(){
       app.isQuiting = true;
       app.quit();
     } });
@@ -119,6 +131,10 @@ app.whenReady().then(async () => {
       }
     });
   });
+
+
+  console.log("locale",app.getLocale());
+
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
