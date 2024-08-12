@@ -45,7 +45,7 @@ const createWindow = () => {
  
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
   
   mainWindow.on('minimize',function(event){
     event.preventDefault();
@@ -65,8 +65,10 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
 
-  // Init 18n (must inist after startup)
+  // Init 18n (must init after startup)
   i18n = new(require('./i18n/i18n.js'))
+  
+
 
   // Create main window
   createWindow();
@@ -76,29 +78,13 @@ app.whenReady().then(async () => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
-    }
-
+    }   
   });
 
   let filepath = app.getPath('home');
   filepath += '/.ssh/config';
 
   let traymenu = []; // Tray menu
-  traymenu.push(
-    { label: i18n.__('Main window'), click:  function(){
-      if(mainWindow.isVisible()) {
-        mainWindow.hide();
-      }
-      else {
-        mainWindow.show();
-      }
-    } });
-  traymenu.push(
-    { label: i18n.__('Quit'), click:  function(){
-      app.isQuiting = true;
-      app.quit();
-    } });
-  traymenu.push({type:'separator'});
 
 
   // Read ssh config file and build menu
@@ -117,6 +103,23 @@ app.whenReady().then(async () => {
       }
     });
 
+    // Add fixed menu elemente
+    traymenu.push({type:'separator'});
+    traymenu.push(
+      { label: i18n.__('Main window'), click:  function(){
+        if(mainWindow.isVisible()) {
+          mainWindow.hide();
+        }
+        else {
+          mainWindow.show();
+        }
+      } });
+    traymenu.push(
+      { label: i18n.__('Quit'), click:  function(){
+        app.isQuiting = true;
+        app.quit();
+      } });
+  
     
     // Createcontext menu and add it to the tray icon
     const contextMenu = Menu.buildFromTemplate(traymenu);
@@ -132,8 +135,8 @@ app.whenReady().then(async () => {
     });
   });
 
-
-  console.log("locale",app.getLocale());
+  // Send I18N to interface process
+  app.interfaceI18n();
 
 });
 
@@ -157,4 +160,11 @@ ipcMain.on('runssh', (event, command) => {
 app.sshconnect = function(event) {
   let cmd ="gnome-terminal -e 'ssh "+event.label+"'";
   child_process.exec(cmd);
+}
+
+
+app.interfaceI18n = function() {
+  // sne I18N JSON to interface
+  //console.log(i18n.getLoadedLanguage());
+  mainWindow.webContents.send('i18n', i18n.getLoadedLanguage());
 }
