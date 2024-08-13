@@ -44,8 +44,8 @@ const createWindow = () => {
 
  
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // Open the DevTools. (needed for debug only)
+  // mainWindow.webContents.openDevTools();
   
   mainWindow.on('minimize',function(event){
     event.preventDefault();
